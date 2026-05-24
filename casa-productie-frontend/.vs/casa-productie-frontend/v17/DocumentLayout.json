@@ -1,0 +1,68 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\AN 3 SEM 2\\PS\\proiect_intermediar_3\\casa-productie-frontend\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\AN 3 SEM 2\\PS\\proiect_intermediar_3\\casa-productie-frontend\\src\\services\\api.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\services\\api.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\AN 3 SEM 2\\PS\\proiect_intermediar_3\\casa-productie-frontend\\src\\pages\\Dashboard.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\pages\\Dashboard.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 1,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Dashboard.js",
+              "DocumentMoniker": "D:\\AN 3 SEM 2\\PS\\proiect_intermediar_3\\casa-productie-frontend\\src\\pages\\Dashboard.js",
+              "RelativeDocumentMoniker": "src\\pages\\Dashboard.js",
+              "ToolTip": "D:\\AN 3 SEM 2\\PS\\proiect_intermediar_3\\casa-productie-frontend\\src\\pages\\Dashboard.js",
+              "RelativeToolTip": "src\\pages\\Dashboard.js",
+              "ViewState": "AgIAAGEDAAAAAAAAAAAiwIEDAAACAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-05-18T07:54:05.734Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "api.js",
+              "DocumentMoniker": "D:\\AN 3 SEM 2\\PS\\proiect_intermediar_3\\casa-productie-frontend\\src\\services\\api.js",
+              "RelativeDocumentMoniker": "src\\services\\api.js",
+              "ToolTip": "D:\\AN 3 SEM 2\\PS\\proiect_intermediar_3\\casa-productie-frontend\\src\\services\\api.js",
+              "RelativeToolTip": "src\\services\\api.js",
+              "ViewState": "AgIAACsAAAAAAAAAAAAiwEsAAAACAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-05-18T07:50:22.264Z",
+              "EditorCaption": ""
+            }
+          ]
+        },
+        {
+          "DockedWidth": 1125,
+          "SelectedChildIndex": -1,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{d78612c7-9962-4b83-95d9-268046dad23a}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -71,11 +71,8 @@ async function urlForMutation(path) {
 
 function mutationUrls(path) {
     const direct = directBase(path);
-    const gatewayUrl = `${GATEWAY}${path}`;
-    const directUrl = direct ? `${direct}${path}` : null;
-    const urls = [gatewayUrl];
-    if (directUrl && directUrl !== gatewayUrl) urls.push(directUrl);
-    return urls;
+    if (direct) return [`${direct}${path}`];
+    return [`${GATEWAY}${path}`];
 }
 
 async function fetchMutationWithFallback(path, options) {
@@ -216,10 +213,16 @@ export const apiService = {
 
     getRegizori: () => apiJson('/api/Regizor'),
     createRegizor: (r) => apiText('/api/Regizor', { method: 'POST', headers: jsonHeaders, body: JSON.stringify(r) }),
+    updateRegizor: (r) => apiText('/api/Regizor', { method: 'PUT', headers: jsonHeaders, body: JSON.stringify(r) }),
+    deleteRegizor: (id) => apiText(`/api/Regizor/${id}`, { method: 'DELETE' }),
     getScenaristi: () => apiJson('/api/Scenarist'),
     createScenarist: (s) => apiText('/api/Scenarist', { method: 'POST', headers: jsonHeaders, body: JSON.stringify(s) }),
+    updateScenarist: (s) => apiText('/api/Scenarist', { method: 'PUT', headers: jsonHeaders, body: JSON.stringify(s) }),
+    deleteScenarist: (id) => apiText(`/api/Scenarist/${id}`, { method: 'DELETE' }),
     getProducatori: () => apiJson('/api/Producator'),
     createProducator: (p) => apiText('/api/Producator', { method: 'POST', headers: jsonHeaders, body: JSON.stringify(p) }),
+    updateProducator: (p) => apiText('/api/Producator', { method: 'PUT', headers: jsonHeaders, body: JSON.stringify(p) }),
+    deleteProducator: (id) => apiText(`/api/Producator/${id}`, { method: 'DELETE' }),
 
     getTopRating: () => apiJson('/api/Statistic/topRating'),
     getTopViews: () => apiJson('/api/Statistic/topVizualizari'),

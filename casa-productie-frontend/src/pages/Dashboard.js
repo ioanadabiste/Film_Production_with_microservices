@@ -97,6 +97,49 @@ function PersonFormFields({ person, onChange, inputStyle, t, showCompany }) {
     );
 }
 
+function PersonCardsGrid({ people, emptyLabel, onPersonClick, subtitleFn, onEdit, onDelete, btnStyle }) {
+    if (!people.length) {
+        return <p style={{ color: '#999', fontSize: 13, margin: '8px 0 12px' }}>{emptyLabel}</p>;
+    }
+    return (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 12 }}>
+            {people.map(p => (
+                <div
+                    key={p.id}
+                    role={onPersonClick ? 'button' : undefined}
+                    tabIndex={onPersonClick ? 0 : undefined}
+                    onClick={onPersonClick ? () => onPersonClick(p) : undefined}
+                    onKeyDown={onPersonClick ? (e) => { if (e.key === 'Enter') onPersonClick(p); } : undefined}
+                    style={{
+                        border: '1px solid #dee2e6', borderRadius: 8, padding: 12, width: 170, textAlign: 'center',
+                        cursor: onPersonClick ? 'pointer' : 'default', background: '#fff'
+                    }}
+                >
+                    {p.foto
+                        ? <img src={p.foto} alt="" style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', marginBottom: 6 }} />
+                        : <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#dee2e6', margin: '0 auto 6px' }} />}
+                    <div><strong>{p.prenume} {p.nume}</strong></div>
+                    <div style={{ fontSize: 12, color: '#666' }}>{p.nationalitate ?? '-'}</div>
+                    {p.companie && <div style={{ fontSize: 11, color: '#888' }}>{p.companie}</div>}
+                    {subtitleFn && <div style={{ fontSize: 11, color: '#3498db', marginTop: 4 }}>{subtitleFn(p)}</div>}
+                    {(onEdit || onDelete) && btnStyle && (
+                        <div style={{ display: 'flex', gap: 4, marginTop: 8, justifyContent: 'center' }} onClick={e => e.stopPropagation()}>
+                            {onEdit && (
+                                <button type="button" style={{ ...btnStyle('#f39c12'), padding: '4px 8px', fontSize: 11 }}
+                                    onClick={() => onEdit(p)}>Edit</button>
+                            )}
+                            {onDelete && (
+                                <button type="button" style={{ ...btnStyle('#e74c3c'), padding: '4px 8px', fontSize: 11 }}
+                                    onClick={() => onDelete(p)}>Sterge</button>
+                            )}
+                        </div>
+                    )}
+                </div>
+            ))}
+        </div>
+    );
+}
+
 // Permite selectarea mai multor actori dintr-o lista cu checkbox-uri
 function ActorMultiSelect({ actors, selectedIds, onChange }) {
     const [search, setSearch] = useState('');
@@ -181,7 +224,7 @@ export const Dashboard = ({ lang }) => {
     const [filmImages, setFilmImages] = useState([]);
     const [newImageUrl, setNewImageUrl] = useState('');
     const [editFilm, setEditFilm] = useState(null);
-    const [editActor, setEditActor] = useState(null);
+    const [editCatalogPerson, setEditCatalogPerson] = useState(null);
     const [editUser, setEditUser] = useState(null);
     const [detailFilm, setDetailFilm] = useState(null);           // modal detalii film
     const [detailActors, setDetailActors] = useState([]);         // actorii filmului selectat
@@ -191,6 +234,7 @@ export const Dashboard = ({ lang }) => {
     const [detailFilmImages, setDetailFilmImages] = useState([]);
     const [filmImagesMap, setFilmImagesMap] = useState({});
     const [detailRegizorFilme, setDetailRegizorFilme] = useState(null);
+    const [detailProducatorFilme, setDetailProducatorFilme] = useState(null);
     const [detailScenaristFilme, setDetailScenaristFilme] = useState(null);
     const [detailActorFilme, setDetailActorFilme] = useState(null);
     const [backendStatus, setBackendStatus] = useState({ gateway: false, user: false, film: false, actor: false, stats: false });
@@ -299,15 +343,15 @@ export const Dashboard = ({ lang }) => {
     // â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const regizorName = (id) => {
         const r = regizori.find(x => x.id === id);
-        return r ? `${r.prenume} ${r.nume}` : `ID ${id}`;
+        return r ? `${r.prenume} ${r.nume}` : '-';
     };
     const scenaristName = (id) => {
         const s = scenaristi.find(x => x.id === id);
-        return s ? `${s.prenume} ${s.nume}` : `ID ${id}`;
+        return s ? `${s.prenume} ${s.nume}` : '-';
     };
     const producatorName = (id) => {
         const p = producatori.find(x => x.id === id);
-        return p ? `${p.prenume} ${p.nume}` : `ID ${id}`;
+        return p ? `${p.prenume} ${p.nume}` : '-';
     };
 
     // â”€â”€ Handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -335,7 +379,7 @@ export const Dashboard = ({ lang }) => {
                 }
             }
             if (actorFail > 0) {
-                alert(`Film salvat (id ${filmId}), dar ${actorFail} actor(i) nu s-au legat.`);
+                alert(`Film salvat, dar ${actorFail} actor(i) nu s-au legat.`);
             } else {
                 alert('Film adaugat!');
             }
@@ -351,11 +395,24 @@ export const Dashboard = ({ lang }) => {
 
     const handleDeleteFilm = (id) => {
         if (!window.confirm('Sigur stergi filmul?')) return;
-        apiService.deleteFilm(id).then(msg => { alert(msg); loadFilms(); });
+        runOnce(async () => {
+            try {
+                const msg = await apiService.deleteFilm(id);
+                alert(msg);
+                loadFilms();
+            } catch (err) { showError(err); }
+        });
     };
     const handleUpdateFilm = (e) => {
         e.preventDefault();
-        apiService.updateFilm(editFilm).then(msg => { alert(msg); setEditFilm(null); loadFilms(); });
+        runOnce(async () => {
+            try {
+                const msg = await apiService.updateFilm(editFilm);
+                alert(msg);
+                setEditFilm(null);
+                loadFilms();
+            } catch (err) { showError(err); }
+        });
     };
     const handleAddActor = (e) => {
         e.preventDefault();
@@ -404,14 +461,57 @@ export const Dashboard = ({ lang }) => {
             } catch (err) { showError(err); }
         });
     };
-    const handleDeleteActor = (id) => {
-        if (!window.confirm('Sigur stergi actorul?')) return;
-        apiService.deleteActor(id).then(msg => { alert(msg); loadActors(); });
+    const openEditCatalog = (kind, person) => setEditCatalogPerson({ kind, person: { ...person } });
+
+    const reloadAfterCatalogChange = (kind) => {
+        if (kind === 'regizor') reloadRegizori();
+        else if (kind === 'scenarist') reloadScenaristi();
+        else if (kind === 'producator') reloadProducatori();
+        else loadActors();
     };
-    const handleUpdateActor = (e) => {
+
+    const handleDeleteCatalog = (kind, person) => {
+        if (!window.confirm(`Sigur stergi ${person.prenume} ${person.nume}?`)) return;
+        runOnce(async () => {
+            try {
+                const del = {
+                    regizor: () => apiService.deleteRegizor(person.id),
+                    scenarist: () => apiService.deleteScenarist(person.id),
+                    producator: () => apiService.deleteProducator(person.id),
+                    actor: () => apiService.deleteActor(person.id)
+                }[kind];
+                const msg = await del();
+                alert(msg);
+                reloadAfterCatalogChange(kind);
+            } catch (err) { showError(err); }
+        });
+    };
+
+    const handleUpdateCatalog = (e) => {
         e.preventDefault();
-        apiService.updateActor(editActor).then(msg => { alert(msg); setEditActor(null); loadActors(); });
+        if (!editCatalogPerson) return;
+        runOnce(async () => {
+            try {
+                const { kind, person } = editCatalogPerson;
+                const upd = {
+                    regizor: () => apiService.updateRegizor(person),
+                    scenarist: () => apiService.updateScenarist(person),
+                    producator: () => apiService.updateProducator(person),
+                    actor: () => apiService.updateActor(person)
+                }[kind];
+                const msg = await upd();
+                alert(msg);
+                setEditCatalogPerson(null);
+                reloadAfterCatalogChange(kind);
+            } catch (err) { showError(err); }
+        });
     };
+
+    const catalogCardActions = (kind) => ({
+        btnStyle,
+        onEdit: (p) => openEditCatalog(kind, p),
+        onDelete: (p) => handleDeleteCatalog(kind, p)
+    });
     const handleViewImages = (film) => {
         setSelectedFilm(film);
         apiService.getFilmImages(film.id).then(d => setFilmImages(safeArray(d))).catch(() => setFilmImages([]));
@@ -431,12 +531,14 @@ export const Dashboard = ({ lang }) => {
     };
     const handleSendNotif = (e) => {
         e.preventDefault();
-        apiService.sendNotification({ type: notifType, userId: parseInt(notifUserId), message: notifMsg })
-            .then(msg => {
+        runOnce(async () => {
+            try {
+                const msg = await apiService.sendNotification({ type: notifType, userId: parseInt(notifUserId, 10), message: notifMsg });
                 alert(`${msg}\n\nVerifica consola IntelliJ la User Service (demo) pentru logul ${notifType}.`);
-                setNotifMsg(''); setNotifUserId('');
-            })
-            .catch(showError);
+                setNotifMsg('');
+                setNotifUserId('');
+            } catch (err) { showError(err); }
+        });
     };
     const handleCreateUser = (e) => {
         e.preventDefault();
@@ -451,11 +553,24 @@ export const Dashboard = ({ lang }) => {
     };
     const handleDeleteUser = (id) => {
         if (!window.confirm('Sigur stergi utilizatorul?')) return;
-        apiService.deleteUser(id).then(msg => { alert(msg); loadUsers(); });
+        runOnce(async () => {
+            try {
+                const msg = await apiService.deleteUser(id);
+                alert(msg);
+                loadUsers();
+            } catch (err) { showError(err); }
+        });
     };
     const handleUpdateUser = (e) => {
         e.preventDefault();
-        apiService.updateUser(editUser).then(msg => { alert(msg); setEditUser(null); loadUsers(); });
+        runOnce(async () => {
+            try {
+                const msg = await apiService.updateUser(editUser);
+                alert(msg);
+                setEditUser(null);
+                loadUsers();
+            } catch (err) { showError(err); }
+        });
     };
     const handleExportUsers = () => {
         apiService.exportUsersCsv().then(csv => {
@@ -563,7 +678,6 @@ export const Dashboard = ({ lang }) => {
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                             <thead>
                                 <tr style={{ background: '#2c3e50', color: '#fff' }}>
-                                    <th style={{ padding: '8px 10px', textAlign: 'left' }}>ID</th>
                                     <th style={{ padding: '8px 10px', textAlign: 'left' }}>Imagini</th>
                                     <th style={{ padding: '8px 10px', textAlign: 'left' }}>{t.titleField}</th>
                                     <th style={{ padding: '8px 10px', textAlign: 'left' }}>An</th>
@@ -578,7 +692,6 @@ export const Dashboard = ({ lang }) => {
                             <tbody>
                                 {filteredMovies.map((m, i) => (
                                     <tr key={m.id} style={{ background: i % 2 === 0 ? '#fff' : '#f2f2f2' }}>
-                                        <td style={{ padding: '6px 10px' }}>{m.id}</td>
                                         <td style={{ padding: '6px 10px' }}>
                                             <FilmImagesCell images={filmImagesMap[m.id] || []} />
                                         </td>
@@ -603,7 +716,7 @@ export const Dashboard = ({ lang }) => {
                                     </tr>
                                 ))}
                                 {filteredMovies.length === 0 && (
-                                    <tr><td colSpan={10} style={{ padding: 16, textAlign: 'center', color: '#999' }}>Niciun film gasit.</td></tr>
+                                    <tr><td colSpan={9} style={{ padding: 16, textAlign: 'center', color: '#999' }}>Niciun film gasit.</td></tr>
                                 )}
                             </tbody>
                         </table>
@@ -694,7 +807,18 @@ export const Dashboard = ({ lang }) => {
                         <h2 style={{ marginTop: 0 }}>{t.catalogTeam}</h2>
                         <p style={{ fontSize: 13, color: '#666', marginTop: 0 }}>{t.catalogHint}</p>
 
-                        <details style={{ marginBottom: 12 }}>
+                        <h3 style={{ marginBottom: 8 }}>{t.directors} ({regizori.length})</h3>
+                        <PersonCardsGrid
+                            people={regizori}
+                            emptyLabel="Niciun regizor."
+                            {...catalogCardActions('regizor')}
+                            onPersonClick={(r) => {
+                                const filme = movies.filter(m => m.regizorId === r.id).map(m => m.titlu);
+                                setDetailRegizorFilme({ regizor: r, filme });
+                            }}
+                            subtitleFn={(r) => `${movies.filter(m => m.regizorId === r.id).length} film(e)`}
+                        />
+                        <details style={{ marginBottom: 20 }}>
                             <summary style={{ cursor: 'pointer', fontWeight: 'bold', color: '#27ae60' }}>+ {t.add} {t.directors}</summary>
                             <form onSubmit={handleAddRegizor}>
                                 <PersonFormFields person={newRegizor} onChange={setNewRegizor} inputStyle={inputStyle} t={t} />
@@ -702,7 +826,18 @@ export const Dashboard = ({ lang }) => {
                             </form>
                         </details>
 
-                        <details style={{ marginBottom: 12 }}>
+                        <h3 style={{ marginBottom: 8 }}>{t.screenwriters} ({scenaristi.length})</h3>
+                        <PersonCardsGrid
+                            people={scenaristi}
+                            emptyLabel="Niciun scenarist."
+                            {...catalogCardActions('scenarist')}
+                            onPersonClick={(s) => {
+                                const filme = movies.filter(m => m.scenaristId === s.id).map(m => m.titlu);
+                                setDetailScenaristFilme({ scenarist: s, filme });
+                            }}
+                            subtitleFn={(s) => `${movies.filter(m => m.scenaristId === s.id).length} film(e)`}
+                        />
+                        <details style={{ marginBottom: 20 }}>
                             <summary style={{ cursor: 'pointer', fontWeight: 'bold', color: '#27ae60' }}>+ {t.add} {t.screenwriters}</summary>
                             <form onSubmit={handleAddScenarist}>
                                 <PersonFormFields person={newScenarist} onChange={setNewScenarist} inputStyle={inputStyle} t={t} />
@@ -710,7 +845,18 @@ export const Dashboard = ({ lang }) => {
                             </form>
                         </details>
 
-                        <details style={{ marginBottom: 12 }}>
+                        <h3 style={{ marginBottom: 8 }}>{t.producers} ({producatori.length})</h3>
+                        <PersonCardsGrid
+                            people={producatori}
+                            emptyLabel="Niciun producator."
+                            {...catalogCardActions('producator')}
+                            onPersonClick={(p) => {
+                                const filme = movies.filter(m => m.producatorId === p.id).map(m => m.titlu);
+                                setDetailProducatorFilme({ producator: p, filme });
+                            }}
+                            subtitleFn={(p) => `${movies.filter(m => m.producatorId === p.id).length} film(e)`}
+                        />
+                        <details style={{ marginBottom: 20 }}>
                             <summary style={{ cursor: 'pointer', fontWeight: 'bold', color: '#27ae60' }}>+ {t.add} {t.producers}</summary>
                             <form onSubmit={handleAddProducator}>
                                 <PersonFormFields person={newProducator} onChange={setNewProducator} inputStyle={inputStyle} t={t} showCompany />
@@ -718,6 +864,27 @@ export const Dashboard = ({ lang }) => {
                             </form>
                         </details>
 
+                        <h3 style={{ marginBottom: 8 }}>{t.actors} ({actors.length})</h3>
+                        <div style={{ display: 'flex', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+                            <input style={inputStyle} placeholder={t.searchActorPlaceholder} value={actorSearch}
+                                onChange={e => setActorSearch(e.target.value)}
+                                onKeyDown={e => e.key === 'Enter' && handleSearchActor()} />
+                            <button type="button" style={btnStyle('#3498db')} onClick={handleSearchActor}>{t.search}</button>
+                            <button type="button" style={btnStyle('#7f8c8d')} onClick={() => { setActorSearch(''); loadActors(); }}>{t.reset}</button>
+                        </div>
+                        <PersonCardsGrid
+                            people={filteredActors}
+                            emptyLabel="Niciun actor."
+                            {...catalogCardActions('actor')}
+                            onPersonClick={async (a) => {
+                                const filmActorList = await apiService.getFilmsByActor(a.id).catch(() => []);
+                                const filmNames = safeArray(filmActorList).map(fa => {
+                                    const f = movies.find(m => m.id === fa.idFilm);
+                                    return f ? `${f.titlu} (${fa.rol ?? '-'})` : 'Film necunoscut';
+                                });
+                                setDetailActorFilme({ actor: a, filme: filmNames });
+                            }}
+                        />
                         <details>
                             <summary style={{ cursor: 'pointer', fontWeight: 'bold', color: '#27ae60' }}>+ {t.add} {t.actors}</summary>
                             <form onSubmit={handleAddActor}>
@@ -747,7 +914,7 @@ export const Dashboard = ({ lang }) => {
                                         const filmActorList = await apiService.getFilmsByActor(a.id).catch(() => []);
                                         const filmNames = safeArray(filmActorList).map(fa => {
                                             const f = movies.find(m => m.id === fa.idFilm);
-                                            return f ? `${f.titlu} (${fa.rol ?? '-'})` : `Film #${fa.idFilm}`;
+                                            return f ? `${f.titlu} (${fa.rol ?? '-'})` : 'Film necunoscut';
                                         });
                                         setDetailActorFilme({ actor: a, filme: filmNames });
                                     }}>
@@ -841,7 +1008,6 @@ export const Dashboard = ({ lang }) => {
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                             <thead>
                                 <tr style={{ background: '#2c3e50', color: '#fff' }}>
-                                    <th style={{ padding: '8px 10px', textAlign: 'left' }}>ID</th>
                                     <th style={{ padding: '8px 10px', textAlign: 'left' }}>Nume</th>
                                     <th style={{ padding: '8px 10px', textAlign: 'left' }}>Email</th>
                                     <th style={{ padding: '8px 10px', textAlign: 'left' }}>Telefon</th>
@@ -851,8 +1017,7 @@ export const Dashboard = ({ lang }) => {
                             </thead>
                             <tbody>
                                 {filteredUsers.map((u, i) => (
-                                    <tr key={u.id?.userId ?? u.id} style={{ background: i % 2 === 0 ? '#fff' : '#f2f2f2' }}>
-                                        <td style={{ padding: '6px 10px' }}>{u.id?.userId ?? u.id}</td>
+                                    <tr key={u.email ?? i} style={{ background: i % 2 === 0 ? '#fff' : '#f2f2f2' }}>
                                         <td style={{ padding: '6px 10px' }}>{u.name} {u.surname}</td>
                                         <td style={{ padding: '6px 10px' }}>{u.email}</td>
                                         <td style={{ padding: '6px 10px' }}>{u.phone ?? '-'}</td>
@@ -885,7 +1050,14 @@ export const Dashboard = ({ lang }) => {
                     <div style={{ marginTop: 24, borderTop: '1px solid #dee2e6', paddingTop: 16 }}>
                         <h4 style={{ marginTop: 0 }}>{t.sendNotif}</h4>
                         <form onSubmit={handleSendNotif} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                            <input style={{ ...inputStyle, width: 100 }} type="number" placeholder="ID User" required value={notifUserId} onChange={e => setNotifUserId(e.target.value)} />
+                            <select style={inputStyle} required value={notifUserId} onChange={e => setNotifUserId(e.target.value)}>
+                                <option value="">Selecteaza utilizator</option>
+                                {usersList.map(u => (
+                                    <option key={u.email} value={u.id?.userId ?? u.id}>
+                                        {u.email} ({u.name} {u.surname})
+                                    </option>
+                                ))}
+                            </select>
                             <select style={inputStyle} value={notifType} onChange={e => setNotifType(e.target.value)}>
                                 <option value="EMAIL">Email</option>
                                 <option value="SMS">SMS</option>
@@ -965,7 +1137,7 @@ export const Dashboard = ({ lang }) => {
                                             {fa.actor?.foto
                                                 ? <img src={fa.actor.foto} alt="" style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover' }} />
                                                 : <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#dee2e6', lineHeight: '48px', fontSize: 18, margin: '0 auto' }}></div>}
-                                            <div style={{ fontSize: 12, marginTop: 4 }}>{fa.actor ? `${fa.actor.prenume} ${fa.actor.nume}` : `Actor #${fa.idActor}`}</div>
+                                            <div style={{ fontSize: 12, marginTop: 4 }}>{fa.actor ? `${fa.actor.prenume} ${fa.actor.nume}` : 'Actor necunoscut'}</div>
                                             {fa.rol && <div style={{ fontSize: 11, color: '#3498db' }}>{fa.rol}</div>}
                                         </div>
                                     ))}
@@ -1034,24 +1206,27 @@ export const Dashboard = ({ lang }) => {
                 </Modal>
             )}
 
-            {/* â•â•â• MODAL: Edit Actor (nefolosit â€“ pastrat pentru compatibilitate) â•â•â• */}
-            {editActor && false && (
-                <Modal title="Edit Editeaza Actor" onClose={() => setEditActor(null)}>
-                    <form onSubmit={handleUpdateActor} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                        <label>Nume<input style={inputStyle} required value={editActor.nume} onChange={e => setEditActor(p => ({ ...p, nume: e.target.value }))} /></label>
-                        <label>Prenume<input style={inputStyle} required value={editActor.prenume} onChange={e => setEditActor(p => ({ ...p, prenume: e.target.value }))} /></label>
-                        <label>An nastere<input style={inputStyle} type="number" value={editActor.anNastere} onChange={e => setEditActor(p => ({ ...p, anNastere: parseInt(e.target.value) }))} /></label>
-                        <label>Nationalitate<input style={inputStyle} value={editActor.nationalitate} onChange={e => setEditActor(p => ({ ...p, nationalitate: e.target.value }))} /></label>
-                        <label>URL Foto<input style={inputStyle} value={editActor.foto ?? ''} onChange={e => setEditActor(p => ({ ...p, foto: e.target.value }))} /></label>
-                        <div style={{ display: 'flex', gap: 8 }}>
-                            <button type="submit" style={btnStyle('#27ae60')}>Salveaza</button>
-                            <button type="button" style={btnStyle('#7f8c8d')} onClick={() => setEditActor(null)}>Anuleaza</button>
+            {editCatalogPerson && (
+                <Modal
+                    title={`${t.edit} ${({ regizor: t.directors, scenarist: t.screenwriters, producator: t.producers, actor: t.actors })[editCatalogPerson.kind]}`}
+                    onClose={() => setEditCatalogPerson(null)}
+                >
+                    <form onSubmit={handleUpdateCatalog}>
+                        <PersonFormFields
+                            person={editCatalogPerson.person}
+                            onChange={(p) => setEditCatalogPerson(prev => ({ ...prev, person: p }))}
+                            inputStyle={inputStyle}
+                            t={t}
+                            showCompany={editCatalogPerson.kind === 'producator'}
+                        />
+                        <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                            <button type="submit" style={btnStyle('#27ae60')}>{t.save}</button>
+                            <button type="button" style={btnStyle('#7f8c8d')} onClick={() => setEditCatalogPerson(null)}>Anuleaza</button>
                         </div>
                     </form>
                 </Modal>
             )}
 
-            {/* â•â•â• MODAL: Edit User â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
             {editUser && (
                 <Modal title="Edit Editeaza Utilizator" onClose={() => setEditUser(null)}>
                     <form onSubmit={handleUpdateUser} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -1111,7 +1286,27 @@ export const Dashboard = ({ lang }) => {
                 </Modal>
             )}
 
-            {/* â•â•â• MODAL: Actor â€“ lista filme â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+            {detailProducatorFilme && (
+                <Modal title={`${detailProducatorFilme.producator.prenume} ${detailProducatorFilme.producator.nume}`} onClose={() => setDetailProducatorFilme(null)}>
+                    {detailProducatorFilme.producator.foto && (
+                        <div style={{ textAlign: 'center', marginBottom: 12 }}>
+                            <img src={detailProducatorFilme.producator.foto} alt="" style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover' }} />
+                        </div>
+                    )}
+                    <p><strong>Nationalitate:</strong> {detailProducatorFilme.producator.nationalitate}</p>
+                    {detailProducatorFilme.producator.companie && (
+                        <p><strong>Companie:</strong> {detailProducatorFilme.producator.companie}</p>
+                    )}
+                    <p><strong>Filme produse ({detailProducatorFilme.filme.length}):</strong></p>
+                    <ul style={{ marginTop: 4 }}>
+                        {detailProducatorFilme.filme.length === 0
+                            ? <li style={{ color: '#999' }}>Niciun film.</li>
+                            : detailProducatorFilme.filme.map((titlu, i) => <li key={i}>{titlu}</li>)}
+                    </ul>
+                </Modal>
+            )}
+
+            {/* MODAL: Actor - lista filme */}
             {detailActorFilme && (
                 <Modal title={`${detailActorFilme.actor.prenume} ${detailActorFilme.actor.nume}`} onClose={() => setDetailActorFilme(null)}>
                     {detailActorFilme.actor.foto && (
